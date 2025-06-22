@@ -55,18 +55,7 @@ export class SquareService {
       const payments = window.Square.payments(config.square.applicationId);
       
       const card = await payments.card();
-      await card.attach('#card-container');
-
-      const paymentRequest = {
-        countryCode: 'US',
-        currencyCode: plan.currency,
-        total: {
-          amount: (plan.price * 100).toString(), // Square uses cents
-          label: plan.name,
-        },
-      };
-
-      const tokenResult = await card.tokenize();
+      await card.attach('#card-container');      const tokenResult = await card.tokenize();
       if (tokenResult.status === 'OK') {
         // Send token to your backend for processing
         const response = await fetch('/api/square/process-payment', {
