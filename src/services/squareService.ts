@@ -31,6 +31,18 @@ export interface SquarePaymentResult {
   error?: string;
 }
 
+interface PaymentData {
+  sourceId: string | undefined;
+  amountMoney: {
+    amount: string;
+    currency: string;
+  };
+  buyerEmailAddress: string;
+  note: string;
+  userId: string;
+  verificationToken?: string;
+}
+
 export class SquareService {
   private static instance: SquareService;
   
@@ -39,8 +51,7 @@ export class SquareService {
       SquareService.instance = new SquareService();
     }
     return SquareService.instance;
-  }
-  async createPayment(planId: string, userEmail: string): Promise<SquarePaymentResult> {
+  }  async createPayment(planId: string, userEmail: string, userId?: string): Promise<SquarePaymentResult> {
     try {
       const plan = subscriptionPlans.find(p => p.id === planId);
       if (!plan) {
@@ -55,23 +66,28 @@ export class SquareService {
       const payments = window.Square.payments(config.square.applicationId);
       
       const card = await payments.card();
-      await card.attach('#card-container');      const tokenResult = await card.tokenize();
-      if (tokenResult.status === 'OK') {        // Send token to your backend for processing
+      await card.attach('#card-container');      // Buyer verification is optional and may not be available in all Square SDK versions
+      // For now, we'll proceed without it as it's not required for basic payments
+      const tokenResult = await card.tokenize();
+      if (tokenResult.status === 'OK') {
+        // Send token to your backend for processing
+        const paymentData: PaymentData = {
+          sourceId: tokenResult.token,
+          amountMoney: {
+            amount: (plan.price * 100).toString(), // Convert to cents as string
+            currency: plan.currency
+          },
+          buyerEmailAddress: userEmail,
+          note: `World War 3 Update - ${plan.name}`,
+          userId: userId || userEmail // Use actual Firebase UID if available
+        };
+
         const response = await fetch('/api/payments/process', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            sourceId: tokenResult.token,
-            amountMoney: {
-              amount: plan.price * 100,
-              currency: plan.currency
-            },
-            buyerEmailAddress: userEmail,
-            note: `World War 3 Update - ${plan.name}`,
-            userId: userEmail // You might want to get the actual Firebase UID here
-          }),
+          body: JSON.stringify(paymentData),
         });
 
         const result = await response.json();
@@ -86,7 +102,9 @@ export class SquareService {
           throw new Error(result.error || 'Payment processing failed');
         }
       } else {
-        throw new Error('Card tokenization failed');
+        const errors = tokenResult.errors || [];
+        const errorMessage = errors.length > 0 ? errors[0].message : 'Card tokenization failed';
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Error creating Square payment:', error);

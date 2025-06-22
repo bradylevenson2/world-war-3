@@ -5,9 +5,7 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  sendPasswordResetEmail,
-  signInWithPopup,
-  GoogleAuthProvider
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { firestoreService } from '../services/firestoreService';
@@ -16,7 +14,6 @@ interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<any>;
   signup: (email: string, password: string) => Promise<any>;
-  signInWithGoogle: () => Promise<any>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   loading: boolean;
@@ -39,16 +36,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return createUserWithEmailAndPassword(auth, email, password);
   };
 
-  const login = (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password);
-  };
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    // Add popup configuration to avoid CORP issues
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
-    return signInWithPopup(auth, provider);
+  const login = (email: string, password: string) => {    return signInWithEmailAndPassword(auth, email, password);
   };
 
   const logout = () => {
@@ -74,12 +62,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     return unsubscribe;
-  }, []);
-  const value = {
+  }, []);  const value = {
     currentUser,
     login,
     signup,
-    signInWithGoogle,
     logout,
     resetPassword,
     loading

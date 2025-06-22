@@ -5,7 +5,7 @@ export default async function handler(req, res) {
 
   try {
     // Your original "spicy" prompt
-    const prompt = `create a captivating and "spicy" so to speak 150 word update on the latest world news pertaining to the development of world war 3. what is the current world state when it comes to world war 3 and what are some expert suggestions about what happened most recently and what may be still to come. feel free to be ominous and vague to some extent but make sure everything you say is factual. make the first sentence of the story super interesting so the reader wants to read more, especially the first part of the first sentence.`;
+    const prompt = `create a captivating and "spicy" so to speak 150 word update on the latest world news pertaining to the development of world war 3. what is the current world state when it comes to world war 3 and what are some expert suggestions about what happened most recently and what may be still to come. feel free to be ominous and vague to some extent but make sure everything you say is factual. make the first sentence of the story super interesting so the reader wants to read more, especially the first part of the first sentence. Place special emphasis on Donald Trump and the conflict with Iran or whatever else is happening prominently surrounding terrorizing weaponry. Focus mainly on one specific update with each post and try to keep it interesting`;
 
     const perplexityApiKey = process.env.PERPLEXITY_API_KEY;
     
