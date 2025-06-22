@@ -56,9 +56,8 @@ export class SquareService {
       
       const card = await payments.card();
       await card.attach('#card-container');      const tokenResult = await card.tokenize();
-      if (tokenResult.status === 'OK') {
-        // Send token to your backend for processing
-        const response = await fetch('/api/square/process-payment', {
+      if (tokenResult.status === 'OK') {        // Send token to your backend for processing
+        const response = await fetch('/api/payments/process', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -70,7 +69,8 @@ export class SquareService {
               currency: plan.currency
             },
             buyerEmailAddress: userEmail,
-            note: `World War 3 Update - ${plan.name}`
+            note: `World War 3 Update - ${plan.name}`,
+            userId: userEmail // You might want to get the actual Firebase UID here
           }),
         });
 
@@ -113,15 +113,12 @@ export class SquareService {
       return false;
     }
   }
-
   getApplicationId(): string {
     return config.square.applicationId || '';
   }
 
-  getAccessToken(): string {
-    return config.square.accessToken || '';
-  }
-
+  // Access token is now server-side only for security
+  // Client-side only needs applicationId for Square Web SDK
   getEnvironment(): string {
     return config.square.environment || 'production';
   }

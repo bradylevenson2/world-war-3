@@ -1,4 +1,4 @@
-// Environment variables configuration
+// Environment variables configuration - ONLY CLIENT-SAFE VARIABLES
 export const config = {
   firebase: {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -7,12 +7,12 @@ export const config = {
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
     appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  },  square: {
+  },
+  square: {
+    // Only include APPLICATION_ID (safe for client-side)
+    // ACCESS_TOKEN is now server-side only
     applicationId: import.meta.env.VITE_SQUARE_APPLICATION_ID,
-    accessToken: import.meta.env.VITE_SQUARE_ACCESS_TOKEN,
     environment: import.meta.env.VITE_SQUARE_ENVIRONMENT || 'production',
   },
-  perplexity: {
-    apiKey: import.meta.env.VITE_PERPLEXITY_API_KEY,
-  },
+  // Perplexity API key is now server-side only
 };
