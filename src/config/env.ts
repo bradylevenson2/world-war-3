@@ -7,8 +7,7 @@ export const config = {
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
     appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  },
-  square: {
+  },  square: {
     applicationId: import.meta.env.VITE_SQUARE_APPLICATION_ID,
     accessToken: import.meta.env.VITE_SQUARE_ACCESS_TOKEN,
     environment: import.meta.env.VITE_SQUARE_ENVIRONMENT || 'production',

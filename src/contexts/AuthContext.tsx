@@ -5,14 +5,18 @@ import {
   createUserWithEmailAndPassword, 
   signOut, 
   onAuthStateChanged,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
+import { firestoreService } from '../services/firestoreService';
 
 interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<any>;
   signup: (email: string, password: string) => Promise<any>;
+  signInWithGoogle: () => Promise<any>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   loading: boolean;
@@ -31,13 +35,20 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
   const signup = (email: string, password: string) => {
     return createUserWithEmailAndPassword(auth, email, password);
   };
 
   const login = (email: string, password: string) => {
     return signInWithEmailAndPassword(auth, email, password);
+  };
+  const signInWithGoogle = () => {
+    const provider = new GoogleAuthProvider();
+    // Add popup configuration to avoid CORP issues
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    return signInWithPopup(auth, provider);
   };
 
   const logout = () => {
@@ -47,20 +58,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const resetPassword = (email: string) => {
     return sendPasswordResetEmail(auth, email);
   };
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Create user profile in Firestore if it doesn't exist
+        try {
+          await firestoreService.createUserProfile(user);
+          await firestoreService.updateLastLogin(user.uid);
+        } catch (error) {
+          console.error('Error creating user profile:', error);
+        }
+      }
       setCurrentUser(user);
       setLoading(false);
     });
 
     return unsubscribe;
   }, []);
-
   const value = {
     currentUser,
     login,
     signup,
+    signInWithGoogle,
     logout,
     resetPassword,
     loading

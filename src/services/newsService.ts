@@ -11,14 +11,13 @@ export interface NewsUpdate {
 }
 
 class NewsService {
-  private readonly PERPLEXITY_API_BASE_URL = 'https://api.perplexity.ai';
-  async generateNewsUpdate(): Promise<NewsUpdate> {
+  private readonly PERPLEXITY_API_BASE_URL = 'https://api.perplexity.ai';  async generateNewsUpdate(): Promise<NewsUpdate> {
     try {
       const prompt = `create a captivating and "spicy" so to speak 150 word update on the latest world news pertaining to the development of world war 3. what is the current world state when it comes to world war 3 and what are some expert suggestions about what happened most recently and what may be still to come. feel free to be ominous and vague to some extent but make sure everything you say is factual. make the first sentence of the story super interesting so the reader wants to read more, especially the first part of the first sentence.`;
 
       if (!config.perplexity.apiKey) {
-        console.warn('Perplexity API key not configured, using fallback');
-        return this.generateFallbackUpdate();
+        console.error('Perplexity API key not configured');
+        throw new Error('News service not configured - API key required');
       }
 
       const response = await axios.post(
@@ -39,7 +38,7 @@ class NewsService {
           temperature: 0.8,
           top_p: 0.9,
           return_citations: true,
-          search_domain_filter: ["bbc.com", "reuters.com", "apnews.com", "cnn.com", "theguardian.com"],
+          search_domain_filter: ["bbc.com", "reuters.com", "apnews.com", "cnn.com", "theguardian.com", "wsj.com", "ft.com", "nytimes.com", "washingtonpost.com", "politico.com"],
           return_images: false,
           return_related_questions: false,
           search_recency_filter: "day",
@@ -78,11 +77,9 @@ class NewsService {
         timestamp: Date.now(),
         sources: sources.length > 0 ? sources : ['Perplexity AI', 'Multiple News Sources'],
         urgencyLevel
-      };
-
-    } catch (error) {
+      };    } catch (error) {
       console.error('Error generating news update:', error);
-      return this.generateFallbackUpdate();
+      throw new Error('Failed to fetch news update');
     }
   }
 
@@ -94,29 +91,6 @@ class NewsService {
     }
     return firstSentence || 'Global Tensions Update';
   }
-
-  private generateFallbackUpdate(): NewsUpdate {
-    const fallbackSummaries = [
-      "⚠️ GLOBAL TENSION ALERT: Recent diplomatic communications reveal increased strain between major world powers. Military analysts report heightened activity across strategic regions as nations reassess their defense postures. Economic sanctions continue to impact global supply chains while cyber warfare incidents spike dramatically. Intelligence sources indicate growing concerns about nuclear deterrence stability. International peacekeeping efforts face unprecedented challenges as regional conflicts threaten to expand. The global community remains on high alert as geopolitical tensions reach critical thresholds amid failing diplomatic initiatives.",
-      
-      "🔥 ESCALATION WATCH: Military exercises by major powers intensify as diplomatic relations deteriorate across multiple fronts. Defense budgets surge globally while arms manufacturers report record demand. Strategic alliances undergo rapid restructuring as nations choose sides in emerging power blocs. Cyber attacks on critical infrastructure multiply, targeting energy and communication systems. Trade wars escalate into broader economic warfare affecting global markets. Nuclear-capable nations increase readiness levels while peace negotiations stall. Citizens worldwide express growing anxiety as emergency preparedness becomes mainstream conversation.",
-      
-      "⚡ CRITICAL DEVELOPMENTS: Intelligence agencies report unprecedented coordination between adversarial nations as proxy conflicts multiply globally. Military buildups accelerate in contested regions while diplomatic channels show signs of complete breakdown. Economic warfare tactics expand beyond traditional sanctions into targeted infrastructure attacks. Nuclear rhetoric reaches dangerous levels as deterrence doctrines face real-world testing. International law struggles to address modern warfare tactics while civilian populations face increasing risks. Emergency protocols activate across multiple nations as the global security architecture faces its greatest test since 1945."
-    ];
-
-    const randomSummary = fallbackSummaries[Math.floor(Math.random() * fallbackSummaries.length)];
-    const urgencyLevel = this.determineUrgencyLevel(randomSummary);
-
-    return {
-      id: `fallback_${Date.now()}`,
-      title: 'Global Security Assessment',
-      summary: randomSummary,
-      timestamp: Date.now(),
-      sources: ['Intelligence Analysis', 'Global Security Reports', 'Defense News'],
-      urgencyLevel
-    };
-  }
-
   private determineUrgencyLevel(summary: string): 'low' | 'medium' | 'high' | 'critical' {
     const urgentKeywords = {
       critical: ['nuclear strike', 'war declared', 'nato article 5', 'invasion', 'missile launch', 'emergency protocols'],

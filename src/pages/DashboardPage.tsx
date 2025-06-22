@@ -7,35 +7,63 @@ import { LogOut, Settings, RefreshCw, Globe } from 'lucide-react';
 import { type NewsUpdate, newsService } from '../services/newsService';
 import toast from 'react-hot-toast';
 
-export const DashboardPage: React.FC = () => {
-  const [newsUpdate, setNewsUpdate] = useState<NewsUpdate | null>(null);
+export const DashboardPage: React.FC = () => {  const [newsUpdate, setNewsUpdate] = useState<NewsUpdate | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [nextUpdateTime, setNextUpdateTime] = useState<number>(0);
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
-
   const fetchLatestUpdate = async (showToast = false) => {
     try {
       setRefreshing(true);
       
+      // Clear old content immediately when fetching new content
+      setNewsUpdate(null);
+      
       // Fetch real news update using Perplexity API
       const update = await newsService.generateNewsUpdate();
       setNewsUpdate(update);
+      
+      // Set next update time to the next hour
+      const now = new Date();
+      const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 0);
+      setNextUpdateTime(nextHour.getTime());
       
       if (showToast) {
         toast.success('Latest update retrieved');
       }
     } catch (error) {
       console.error('Error fetching update:', error);
-      toast.error('Failed to retrieve latest update');
+      // Keep newsUpdate as null if fetch fails - no fallback content
+      setNewsUpdate(null);
+      if (showToast) {
+        toast.error('Failed to retrieve latest update');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
-
   useEffect(() => {
     fetchLatestUpdate();
+    
+    // Set up automatic hourly fetching
+    const checkForUpdate = () => {
+      const now = new Date();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      
+      // Trigger update at the top of each hour (0 minutes, 0 seconds)
+      if (minutes === 0 && seconds === 0) {
+        console.log('Automatic hourly update triggered');
+        fetchLatestUpdate(true);
+      }
+    };
+    
+    // Check every second for the exact moment to update
+    const intervalId = setInterval(checkForUpdate, 1000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleLogout = async () => {
@@ -56,17 +84,10 @@ export const DashboardPage: React.FC = () => {
     <div className="min-h-screen" style={{ backgroundColor: 'var(--background)' }}>
       {/* Header */}
       <header className="bg-white border-b" style={{ borderColor: 'var(--border-color)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">            <div className="flex items-center space-x-3">
-              <img 
-                src="/logo.svg" 
-                alt="Logo" 
-                className="h-8 w-8 flex-shrink-0"
-              />
-              <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-gray-800">World War 3 Update</h1>
-                <p className="text-sm text-gray-600">Stay informed with regular updates</p>
-              </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">          <div className="flex items-center justify-between h-16">
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold text-gray-800">WORLD WAR 3 UPDATE</h1>
+              <p className="text-sm text-gray-600">STAY INFORMED WITH REGULAR UPDATES</p>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -106,9 +127,8 @@ export const DashboardPage: React.FC = () => {
         </div>
       </header>      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Countdown Timer at top */}
-        <div className="max-w-md mx-auto mb-8">
-          <CountdownTimer />
+        {/* Countdown Timer at top */}        <div className="max-w-md mx-auto mb-8">
+          <CountdownTimer nextUpdateTime={nextUpdateTime} />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -128,37 +148,7 @@ export const DashboardPage: React.FC = () => {
               <NewsUpdateDisplay 
                 newsUpdate={newsUpdate} 
                 loading={loading}
-              />
-            </div>
-
-            {/* Historical Updates */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-                Previous Updates
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { time: '2 hours ago', title: 'Diplomatic discussions continue in neutral territories', level: 'low' },
-                  { time: '4 hours ago', title: 'International organizations call for peaceful resolution', level: 'medium' },
-                  { time: '6 hours ago', title: 'Economic markets show cautious optimism', level: 'low' },
-                  { time: '8 hours ago', title: 'Multiple countries express commitment to dialogue', level: 'low' },
-                ].map((item, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0" style={{ borderColor: 'var(--border-color)' }}>
-                    <div className="flex-1">
-                      <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{item.title}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{item.time}</p>
-                    </div>
-                    <div className={`px-2 py-1 rounded text-xs font-medium ${
-                      item.level === 'high' ? 'bg-orange-100 text-orange-700' :
-                      item.level === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                      'bg-green-100 text-green-700'
-                    }`}>
-                      {item.level}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+              />            </div>
           </div>
 
           {/* Right Column - Status */}

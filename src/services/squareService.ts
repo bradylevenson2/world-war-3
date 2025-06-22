@@ -15,14 +15,11 @@ export const subscriptionPlans: SubscriptionPlan[] = [
     name: '12 Month Access',
     price: 1.49,
     currency: 'USD',
-    interval: 'year',
-    features: [
+    interval: 'year',    features: [
       '12 months full access',
       'Hourly global updates',
-      'Email notifications',
       'Mobile access',
-      'No ads',
-      'Cancel anytime'
+      'No ads'
     ]
   }
 ];
@@ -43,7 +40,6 @@ export class SquareService {
     }
     return SquareService.instance;
   }
-
   async createPayment(planId: string, userEmail: string): Promise<SquarePaymentResult> {
     try {
       const plan = subscriptionPlans.find(p => p.id === planId);
@@ -51,33 +47,63 @@ export class SquareService {
         throw new Error('Plan not found');
       }
 
-      // In a real implementation, this would call your backend API
-      // which would then call Square's API to create a payment
+      // Check if Square Web Payments SDK is loaded
+      if (!window.Square) {
+        throw new Error('Square Web Payments SDK not loaded');
+      }
+
+      const payments = window.Square.payments(config.square.applicationId);
       
-      console.log('Creating Square payment for:', { 
-        planId, 
-        userEmail, 
-        plan,
-        amount: plan.price * 100, // Square uses cents
-        currency: plan.currency
-      });
-      
-      // For now, we'll simulate the response
-      const mockResponse: SquarePaymentResult = {
-        success: true,
-        paymentId: `PAY_${Date.now()}`,
-        orderId: `ORDER_${Date.now()}`
+      const card = await payments.card();
+      await card.attach('#card-container');
+
+      const paymentRequest = {
+        countryCode: 'US',
+        currencyCode: plan.currency,
+        total: {
+          amount: (plan.price * 100).toString(), // Square uses cents
+          label: plan.name,
+        },
       };
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      return mockResponse;
+
+      const tokenResult = await card.tokenize();
+      if (tokenResult.status === 'OK') {
+        // Send token to your backend for processing
+        const response = await fetch('/api/square/process-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sourceId: tokenResult.token,
+            amountMoney: {
+              amount: plan.price * 100,
+              currency: plan.currency
+            },
+            buyerEmailAddress: userEmail,
+            note: `World War 3 Update - ${plan.name}`
+          }),
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          return {
+            success: true,
+            paymentId: result.paymentId,
+            orderId: result.orderId
+          };
+        } else {
+          throw new Error(result.error || 'Payment processing failed');
+        }
+      } else {
+        throw new Error('Card tokenization failed');
+      }
     } catch (error) {
       console.error('Error creating Square payment:', error);
       return {
         success: false,
-        error: 'Failed to create payment'
+        error: error instanceof Error ? error.message : 'Failed to create payment'
       };
     }
   }

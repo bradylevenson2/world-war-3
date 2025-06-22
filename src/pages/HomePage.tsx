@@ -6,25 +6,33 @@ import { Globe, LogIn, UserPlus, RefreshCw } from 'lucide-react';
 import { type NewsUpdate, newsService } from '../services/newsService';
 import toast from 'react-hot-toast';
 
-export const HomePage: React.FC = () => {
-  const [newsUpdate, setNewsUpdate] = useState<NewsUpdate | null>(null);
+export const HomePage: React.FC = () => {  const [newsUpdate, setNewsUpdate] = useState<NewsUpdate | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const navigate = useNavigate();
-
-  const fetchLatestUpdate = async (showToast = false) => {
+  const [nextUpdateTime, setNextUpdateTime] = useState<number>(0);
+  const navigate = useNavigate();  const fetchLatestUpdate = async (showToast = false) => {
     try {
       setRefreshing(true);
+      
+      // Clear old content immediately when fetching new content
+      setNewsUpdate(null);
       
       // Fetch real news update using Perplexity API
       const update = await newsService.generateNewsUpdate();
       setNewsUpdate(update);
+      
+      // Set next update time to the next hour
+      const now = new Date();
+      const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 0);
+      setNextUpdateTime(nextHour.getTime());
       
       if (showToast) {
         toast.success('Latest update retrieved');
       }
     } catch (error) {
       console.error('Error fetching update:', error);
+      // Keep newsUpdate as null if fetch fails - no fallback content
+      setNewsUpdate(null);
       if (showToast) {
         toast.error('Failed to retrieve latest update');
       }
@@ -33,9 +41,26 @@ export const HomePage: React.FC = () => {
       setRefreshing(false);
     }
   };
-
   useEffect(() => {
     fetchLatestUpdate();
+    
+    // Set up automatic hourly fetching
+    const checkForUpdate = () => {
+      const now = new Date();
+      const minutes = now.getMinutes();
+      const seconds = now.getSeconds();
+      
+      // Trigger update at the top of each hour (0 minutes, 0 seconds)
+      if (minutes === 0 && seconds === 0) {
+        console.log('Automatic hourly update triggered');
+        fetchLatestUpdate(true);
+      }
+    };
+    
+    // Check every second for the exact moment to update
+    const intervalId = setInterval(checkForUpdate, 1000);
+    
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleRefresh = () => {
@@ -85,9 +110,8 @@ export const HomePage: React.FC = () => {
         </div>
       </header>      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Countdown Timer at top */}
-        <div className="max-w-md mx-auto mb-8">
-          <CountdownTimer />
+        {/* Countdown Timer at top */}        <div className="max-w-md mx-auto mb-8">
+          <CountdownTimer nextUpdateTime={nextUpdateTime} />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">

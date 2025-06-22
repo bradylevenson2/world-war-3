@@ -1,39 +1,44 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Check, CreditCard, ArrowLeft } from 'lucide-react';
-import { subscriptionPlans, squareService } from '../services/squareService';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { Check, ArrowLeft } from 'lucide-react';
+import { subscriptionPlans } from '../services/squareService';
+import { SquarePaymentForm } from '../components/SquarePaymentForm';
+import { config } from '../config/env';
 import toast from 'react-hot-toast';
 
 export const PaymentPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const { currentUser } = useAuth();
+  const { setSubscriptionActive } = useSubscription();
   const navigate = useNavigate();
 
   const userEmail = currentUser?.email || email;
-
-  const handleSubscribe = async () => {
+  const handlePaymentSuccess = async (token: string) => {
     if (!userEmail) {
       toast.error('Please enter your email address');
       return;
-    }
-
-    setLoading(true);
+    }    setLoading(true);
     
     try {
-      const result = await squareService.createPayment('annual_plan', userEmail);
+      // Simulate payment processing (replace with real backend call)
+      console.log('Processing payment with token:', token);
       
-      if (result.success) {
-        toast.success('Payment complete! Welcome to World War 3 Update.');
-        if (currentUser) {
-          navigate('/dashboard');
-        } else {
-          toast.success('Please sign up to access your subscription.');
-          navigate('/signup');
-        }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Set subscription as active
+      setSubscriptionActive();
+      
+      toast.success('Payment complete! Welcome to World War 3 Update.');
+      
+      if (currentUser) {
+        navigate('/dashboard');
       } else {
-        toast.error(result.error || 'Payment failed. Please try again.');
+        toast.success('Please sign up to access your subscription.');
+        navigate('/signup');
       }
     } catch (error) {
       console.error('Payment error:', error);
@@ -41,6 +46,11 @@ export const PaymentPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast.error(error);
+    setLoading(false);
   };
 
   return (
@@ -54,22 +64,12 @@ export const PaymentPage: React.FC = () => {
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Home
-        </button>
-
-        {/* Header */}        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-4">
-            <img 
-              src="/logo.svg" 
-              alt="World War 3 Update Logo" 
-              className="h-6 w-6 mr-3" 
-              style={{ filter: 'none' }}
-            />
-          </div>
+        </button>        {/* Header */}        <div className="text-center mb-12">
           <h1 className="text-3xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            Subscribe to World War 3 Updates
+            SUBSCRIBE TO WORLD WAR 3 UPDATES
           </h1>
           <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-            Get unlimited access to critical global security updates for just $1.49/year
+            GET UNLIMITED ACCESS TO CRITICAL GLOBAL SECURITY UPDATES FOR JUST $1.49/YEAR
           </p>
         </div>
 
@@ -116,30 +116,42 @@ export const PaymentPage: React.FC = () => {
                   onFocus={(e) => e.target.style.borderColor = 'var(--primary-brown)'}
                   onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
                 />
+              </div>            )}            {/* Square Payment Form */}
+            {config.square.applicationId ? (
+              <SquarePaymentForm
+                key="square-payment-form" 
+                onPaymentSuccess={handlePaymentSuccess}
+                onPaymentError={handlePaymentError}
+                loading={loading}
+              />
+            ) : (
+              /* Test Payment Button for Development */
+              <div className="space-y-4">
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Development Mode:</strong> Square credentials not configured. Using test payment.
+                  </p>
+                </div>
+                <button
+                  onClick={() => handlePaymentSuccess('test_token_12345')}
+                  disabled={loading}
+                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      Processing Test Payment...
+                    </div>
+                  ) : (
+                    'Test Payment - $1.49 (Development)'
+                  )}
+                </button>
               </div>
             )}
 
-            <button
-              onClick={handleSubscribe}
-              disabled={loading || (!currentUser && !email)}
-              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Processing...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center">
-                  <CreditCard className="h-5 w-5 mr-2" />
-                  Get 12 Month Access
-                </div>
-              )}
-            </button>
-
             <div className="mt-4 text-center">
               <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                Secure payment via Square • Cancel anytime • 30-day money-back guarantee
+                Secure payment via Square
               </p>
             </div>
 

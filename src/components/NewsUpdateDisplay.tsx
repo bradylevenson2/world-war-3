@@ -1,9 +1,9 @@
 import React from 'react';
 import { Clock, ExternalLink, Lock, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { useNavigate } from 'react-router-dom';
 import type { NewsUpdate } from '../services/newsService';
-import { newsService } from '../services/newsService';
 import { formatDistanceToNow } from 'date-fns';
 
 interface NewsUpdateDisplayProps {
@@ -18,6 +18,7 @@ export const NewsUpdateDisplay: React.FC<NewsUpdateDisplayProps> = ({
   className = '' 
 }) => {
   const { currentUser } = useAuth();
+  const { hasActiveSubscription } = useSubscription();
   const navigate = useNavigate();
 
   if (loading) {
@@ -38,23 +39,18 @@ export const NewsUpdateDisplay: React.FC<NewsUpdateDisplayProps> = ({
       </div>
     );
   }
-
   if (!newsUpdate) {
     return (
       <div className={`card ${className}`}>
         <div className="text-center py-8">
           <Clock className="h-12 w-12 mx-auto mb-4" style={{ color: 'var(--text-secondary)' }} />
-          <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>No Updates Available</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>Latest update will appear here</p>
+          <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>NO UPDATES AVAILABLE</h3>
+          <p style={{ color: 'var(--text-secondary)' }}>AWAITING LATEST INTELLIGENCE BRIEFING</p>
         </div>
       </div>
     );
-  }
-  // Determine if user has access to full content
-  const hasFullAccess = !!currentUser;
-  const previewText = hasFullAccess ? newsUpdate.summary : newsService.getPreviewText(newsUpdate.summary);
-  const remainingText = hasFullAccess ? '' : newsService.getRemainingText(newsUpdate.summary);
-  const isPreviewOnly = !hasFullAccess;
+  }  // Determine if user has access to full content
+  const hasFullAccess = currentUser && hasActiveSubscription;
 
   return (
     <div className={`card ${className}`}>      {/* Header */}
@@ -67,63 +63,45 @@ export const NewsUpdateDisplay: React.FC<NewsUpdateDisplayProps> = ({
         {newsUpdate.title}
       </h2>      {/* Summary with paywall logic */}
       <div className="prose prose-sm max-w-none relative">
-        <p className="leading-relaxed whitespace-pre-line uppercase" style={{ color: 'var(--text-primary)' }}>
-          {previewText}
-        </p>
-        
-        {/* Blur overlay and paywall for non-authenticated users */}
-        {isPreviewOnly && (
-          <div className="mt-2">
-            {/* Blurred continuation text */}            <div className="relative">
-              <p 
-                className="leading-relaxed whitespace-pre-line blur-sm select-none pointer-events-none uppercase" 
-                style={{ color: 'var(--text-primary)' }}
-              >
-                {remainingText}
-              </p>
-              
-              {/* Gradient overlay */}
-              <div 
-                className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white opacity-90"
-                style={{ background: 'linear-gradient(to bottom, transparent 0%, transparent 30%, var(--background) 100%)' }}
-              ></div>
-            </div>
+        {hasFullAccess ? (
+          <p className="leading-relaxed whitespace-pre-line uppercase" style={{ color: 'var(--text-primary)' }}>
+            {newsUpdate.summary}
+          </p>
+        ) : (
+          /* Paywall for non-authenticated users */
+          <div className="p-6 border-2 border-dashed rounded-lg text-center" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-background)' }}>
+            <Lock className="h-8 w-8 mx-auto mb-3" style={{ color: 'var(--primary-brown)' }} />
+            <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+              SUBSCRIBE TO READ
+            </h3>
+            <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+              GET THE FULL WORLD WAR 3 UPDATE WITH CRITICAL ANALYSIS AND INSIGHTS
+            </p>
             
-            {/* Paywall CTA */}
-            <div className="mt-6 p-6 border-2 border-dashed rounded-lg text-center" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--card-background)' }}>
-              <Lock className="h-8 w-8 mx-auto mb-3" style={{ color: 'var(--primary-brown)' }} />
-              <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                Continue Reading
-              </h3>
-              <p className="mb-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Get the full World War 3 update with critical analysis and insights
-              </p>
+            <div className="space-y-2">
+              <button
+                onClick={() => navigate('/payment')}
+                className="w-full px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center"
+                style={{ 
+                  backgroundColor: 'var(--primary-brown)',
+                  color: 'white'
+                }}
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                Subscribe - $1.49 for 12 months
+              </button>
               
-              <div className="space-y-2">
-                <button
-                  onClick={() => navigate('/payment')}
-                  className="w-full px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center"
-                  style={{ 
-                    backgroundColor: 'var(--primary-brown)',
-                    color: 'white'
-                  }}
-                >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Subscribe - $1.49 for 12 months
-                </button>
-                
-                <button
-                  onClick={() => navigate('/login')}
-                  className="w-full px-4 py-2 rounded-lg font-medium transition-colors border"
-                  style={{ 
-                    borderColor: 'var(--border-color)',
-                    color: 'var(--text-primary)',
-                    backgroundColor: 'transparent'
-                  }}
-                >
-                  Already subscribed? Sign in
-                </button>
-              </div>
+              <button
+                onClick={() => navigate('/login')}
+                className="w-full px-4 py-2 rounded-lg font-medium transition-colors border"
+                style={{ 
+                  borderColor: 'var(--border-color)',
+                  color: 'var(--text-primary)',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                Already subscribed? Sign in
+              </button>
             </div>
           </div>
         )}

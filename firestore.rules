@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read and write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Subscription data - users can only access their own
+    match /subscriptions/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow creation of new subscription with proper validation
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasAll(['userId', 'plan', 'status', 'startDate', 'expiresAt'])
+        && request.resource.data.userId == userId
+        && request.resource.data.status in ['active', 'pending', 'expired', 'cancelled']
+        && request.resource.data.plan in ['annual_plan']
+        && request.resource.data.startDate is timestamp
+        && request.resource.data.expiresAt is timestamp;
+    }
+    
+    // Payment records - users can read their own payment history
+    match /payments/{paymentId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null 
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.keys().hasAll(['userId', 'amount', 'currency', 'status', 'timestamp'])
+        && request.resource.data.status in ['pending', 'completed', 'failed', 'cancelled'];
+    }
+    
+    // News updates - authenticated users with active subscriptions can read
+    match /news/{newsId} {
+      allow read: if request.auth != null;
+      // Only admins/functions can write news updates
+      allow write: if false;
+    }
+    
+    // News cache for quick access - authenticated users only
+    match /newsCache/latest {
+      allow read: if request.auth != null;
+      allow write: if false; // Only functions can update
+    }
+    
+    // Admin functions only
+    match /admin/{document=**} {
+      allow read, write: if false; // Only server-side functions
+    }
+    
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

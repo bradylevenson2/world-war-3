@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
@@ -30,8 +31,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="App">
-          <Routes>
+        <SubscriptionProvider>
+          <div className="App">
+            <Routes>
             <Route 
               path="/" 
               element={
@@ -99,6 +101,7 @@ function App() {
             }}
           />
         </div>
+      </SubscriptionProvider>
       </AuthProvider>
     </Router>
   );

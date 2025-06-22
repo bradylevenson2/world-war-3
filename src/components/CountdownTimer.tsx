@@ -49,66 +49,87 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
 
   const formatTime = (value: number): string => {
     return value.toString().padStart(2, '0');
-  };
-  return (
+  };  return (
     <div className={`card ${className}`}>
-      <div className="flex items-center justify-center mb-4">
-        <Clock className={`h-6 w-6 mr-2 ${isUrgent ? 'animate-pulse' : ''}`} style={{ color: isUrgent ? '#dc2626' : 'var(--primary-brown)' }} />
-        <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
-          Next Update
+      <div className="flex items-center justify-center mb-8">
+        <Clock className={`h-16 w-16 mr-4 ${isUrgent ? 'animate-pulse' : ''}`} style={{ color: '#dc2626' }} />
+        <h3 className="text-5xl font-bold text-red-600">
+          NEXT UPDATE IN
         </h3>
       </div>
-      
-      <div className="flex justify-center space-x-4">
+        <div className="flex justify-center space-x-6">
         <div className="text-center">
           <div 
-            className={`text-3xl font-bold ${isUrgent ? 'animate-pulse' : ''}`}
-            style={{ color: isUrgent ? '#dc2626' : 'var(--primary-brown)' }}
+            className={`font-black ${isUrgent ? 'animate-pulse' : ''}`}
+            style={{ 
+              color: '#dc2626', 
+              textShadow: '4px 4px 8px rgba(0,0,0,0.5)',
+              fontSize: '16rem',
+              lineHeight: '1'
+            }}
           >
             {formatTime(timeLeft.hours)}
           </div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Hours</div>
+          <div className="text-3xl font-bold text-red-500 mt-3">HOURS</div>
         </div>
         
         <div className="flex items-center">
           <span 
-            className="text-3xl font-bold"
-            style={{ color: isUrgent ? '#dc2626' : 'var(--text-secondary)' }}
+            className="font-black"
+            style={{ 
+              color: '#dc2626',
+              fontSize: '16rem',
+              lineHeight: '1'
+            }}
           >:</span>
         </div>
         
         <div className="text-center">
           <div 
-            className={`text-3xl font-bold ${isUrgent ? 'animate-pulse' : ''}`}
-            style={{ color: isUrgent ? '#dc2626' : 'var(--primary-brown)' }}
+            className={`font-black ${isUrgent ? 'animate-pulse' : ''}`}
+            style={{ 
+              color: '#dc2626', 
+              textShadow: '4px 4px 8px rgba(0,0,0,0.5)',
+              fontSize: '16rem',
+              lineHeight: '1'
+            }}
           >
             {formatTime(timeLeft.minutes)}
           </div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Minutes</div>
+          <div className="text-3xl font-bold text-red-500 mt-3">MINUTES</div>
         </div>
         
         <div className="flex items-center">
           <span 
-            className="text-3xl font-bold"
-            style={{ color: isUrgent ? '#dc2626' : 'var(--text-secondary)' }}
+            className="font-black"
+            style={{ 
+              color: '#dc2626',
+              fontSize: '16rem',
+              lineHeight: '1'
+            }}
           >:</span>
         </div>
         
         <div className="text-center">
           <div 
-            className={`text-3xl font-bold ${isUrgent ? 'animate-pulse' : ''}`}
-            style={{ color: isUrgent ? '#dc2626' : 'var(--primary-brown)' }}
+            className={`font-black ${isUrgent ? 'animate-pulse' : ''}`}
+            style={{ 
+              color: '#dc2626', 
+              textShadow: '4px 4px 8px rgba(0,0,0,0.5)',
+              fontSize: '16rem',
+              lineHeight: '1'
+            }}
           >
             {formatTime(timeLeft.seconds)}
           </div>
-          <div className="text-sm" style={{ color: 'var(--text-secondary)' }}>Seconds</div>
+          <div className="text-3xl font-bold text-red-500 mt-3">SECONDS</div>
         </div>
       </div>
 
       {isUrgent && (
-        <div className="mt-4 flex items-center justify-center text-red-600">
-          <Clock className="h-4 w-4 mr-2 animate-pulse" />
-          <span className="text-sm font-medium">Update due soon</span>
+        <div className="mt-8 flex items-center justify-center text-red-600">
+          <Clock className="h-12 w-12 mr-4 animate-pulse" />
+          <span className="text-4xl font-bold animate-pulse">⚠️ UPDATE IMMINENT ⚠️</span>
         </div>
       )}
     </div>
