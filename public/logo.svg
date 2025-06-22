@@ -1,0 +1,15 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer circle -->
+  <circle cx="32" cy="32" r="30" fill="white" stroke="black" stroke-width="4"/>
+  
+  <!-- Simple capsule shape -->
+  <rect x="12" y="18" width="12" height="28" rx="6" fill="black"/>
+  
+  <!-- Clock -->
+  <circle cx="42" cy="22" r="8" fill="white" stroke="black" stroke-width="2"/>
+  <line x1="42" y1="22" x2="42" y2="16" stroke="black" stroke-width="2"/>
+  
+  <!-- Bomb -->
+  <circle cx="38" cy="42" r="6" fill="black"/>
+  <line x1="38" y1="36" x2="36" y2="32" stroke="black" stroke-width="2"/>
+</svg>
