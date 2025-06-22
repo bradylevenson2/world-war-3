@@ -66,7 +66,7 @@ export const PaymentPage: React.FC = () => {
           Back to Home
         </button>        {/* Header */}        <div className="text-center mb-12">
           <h1 className="text-3xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
-            SUBSCRIBE TO WORLD WAR 3 UPDATES
+            SUBSCRIBE TO WORLD WAR 3 UPDATE
           </h1>
           <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
             GET UNLIMITED ACCESS TO CRITICAL GLOBAL SECURITY UPDATES FOR JUST $1.49/YEAR
