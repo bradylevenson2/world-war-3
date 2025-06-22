@@ -3,10 +3,25 @@ import admin from 'firebase-admin';
 
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'world-war-3-update'
-  });
+  try {
+    // Try to use service account key first (for Vercel)
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'world-war-3-update'
+      });
+    } else {
+      // Fallback to application default (for local development)
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+        projectId: process.env.VITE_FIREBASE_PROJECT_ID || 'world-war-3-update'
+      });
+    }
+  } catch (error) {
+    console.error('Firebase Admin initialization error:', error);
+    throw new Error('Firebase Admin SDK initialization failed');
+  }
 }
 
 const db = admin.firestore();

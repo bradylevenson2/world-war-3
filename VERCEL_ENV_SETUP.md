@@ -12,6 +12,9 @@ You MUST configure these environment variables in your Vercel dashboard for the 
 ### 2. Add these SERVER-SIDE variables (for API routes):
 
 ```bash
+# Firebase Admin SDK (CRITICAL for saving payments)
+FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"world-war-3-update",...FULL_JSON_HERE...}
+
 # Square Payment Processing (REQUIRED)
 SQUARE_ACCESS_TOKEN=EAAAl3bTJ1n3JC4oS8N86fU0AeBJdvjaj3K6wEtkkZYWqzOUrbMhKIPc1epJnLsd
 SQUARE_APPLICATION_ID=sq0idp-ZyRAQ_NcnDmhlnjZGkVVCw
